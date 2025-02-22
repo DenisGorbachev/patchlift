@@ -11,9 +11,9 @@ export const WORKFLOWS = [".github/workflows"]
 export const MISE = ["mise.toml"]
 export const BASIC = [...MISE, ...LEFTHOOK, ...COMMITLINT]
 export const RUST_PUBLIC = unique([
-    ...BASIC,
-    ...RUST,
-    ...README,
-    ...WORKFLOWS,
-    ...LICENSES_APACHE_MIT,
+  ...BASIC,
+  ...RUST,
+  ...README,
+  ...WORKFLOWS,
+  ...LICENSES_APACHE_MIT,
 ])
