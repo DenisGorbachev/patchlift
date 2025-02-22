@@ -1,0 +1,21 @@
+{
+  "version": "3",
+  "packages": {
+    "specifiers": {
+      "npm:remeda@2.20.2": "npm:remeda@2.20.2"
+    },
+    "npm": {
+      "remeda@2.20.2": {
+        "integrity": "sha512-38pfm5aUq6mUkNYbt7TdY2WEk9mSqRVV+6UsoTjabwmbu8obLbh8sYYSX2WQ3W4u6EYp3XxUKqIiwGFZu+OY9g==",
+        "dependencies": {
+          "type-fest": "type-fest@4.35.0"
+        }
+      },
+      "type-fest@4.35.0": {
+        "integrity": "sha512-2/AwEFQDFEy30iOLjrvHDIH7e4HEWH+f1Yl1bI5XMqzuoCUqwYCdxachgsgv0og/JdVZUhbfjcJAoHj5L1753A==",
+        "dependencies": {}
+      }
+    }
+  },
+  "remote": {}
+}
