@@ -1,7 +1,18 @@
 {
+  "name": "@dengorbachev/setup-repo",
+  "version": "0.1.0",
+  "license": "MIT",
+  "exports": "./index.ts",
   "fmt": {
     "lineWidth": 100500,
     "semiColons": false
+  },
+  "lint": {
+    "rules": {
+      "exclude": [
+        "no-slow-types"
+      ]
+    }
   },
   "compilerOptions": {
     "strict": true,
