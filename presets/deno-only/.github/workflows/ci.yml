@@ -1,0 +1,29 @@
+name: CI
+on:
+  push:
+  pull_request:
+
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  DENO_DIR: deno_cache
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+        with:
+          version: 2025.1.14
+      - name: Cache Deno dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.DENO_DIR }}
+          key: ${{ hashFiles('deno.lock') }}
+      - run: lefthook run --force pre-commit
+      - uses: wagoid/commitlint-github-action@v6
+        with:
+          failOnWarnings: true
+          failOnErrors: true
