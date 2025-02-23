@@ -1,0 +1,4 @@
+// A specific physical device
+Type :: Device
+
+#rel Device Filesystem

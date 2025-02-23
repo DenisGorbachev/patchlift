@@ -1,4 +1,7 @@
-Type :: Repository
+Type :: Repo
 
-Repo = Repository
+#rel Repo Paths
 
+#rel Repo Paths
+
+#rel Repo Branches

@@ -1,0 +1,2 @@
+// Mode is a filesystem mode
+Type :: Mode :: New (value : U32)

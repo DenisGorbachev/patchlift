@@ -1,0 +1,27 @@
+#newtype Path (List String)
+
+Paths = List Path
+
+#rel Path (content : Bytes)
+
+Relation :: UnixPathString (path : Path) (string : String)
+
+UnixPathString (Path.New segments) string :: New
+    segments : List String
+    string : String
+    _ : Join "/" segments string
+
+Relation :: Join (separator : String) (parts : List String) (result : String)
+
+Join separator List.Nil String.Nil :: Empty
+    separator : String
+
+Join separator parts_new result_new :: NonEmpty
+    separator : String
+    head : String
+    tail : List String
+    result_old : String
+    _ : Concat separator result_old result_old_with_separator
+    _ : Concat head result_old_with_separator result_old_with_separator_and_head
+    parts_new = List.Cons head tail
+    result_new = result_old_with_separator_and_head

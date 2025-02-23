@@ -1,0 +1,11 @@
+// Represents a single change in a commit
+// TODO: Need more understanding (I can't yet map this type to the actual type used by git)
+Type :: Change
+
+// TODO: Some changes are deletions of file
+// TODO: Some changes are additions of file with content
+// TODO: Some changes are renames of file
+// TODO: Some changes are modifications of file content
+
+// A canonical rendering of a change as diff in terminal
+#rel Diff String

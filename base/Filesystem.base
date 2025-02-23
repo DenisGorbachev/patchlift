@@ -1,0 +1,4 @@
+// A specific filesystem on a specific device
+Type :: Filesystem
+
+#rel Filesystem Paths

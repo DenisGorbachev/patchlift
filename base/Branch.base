@@ -1,0 +1,5 @@
+Type :: Branch
+
+Relation :: BranchName (branch : Branch) (name : String)
+
+Relation :: BranchCommits (branch : Branch) (commits : List Commit)
