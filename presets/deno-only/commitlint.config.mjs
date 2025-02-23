@@ -1,0 +1,1 @@
+../basic/commitlint.config.mjs
