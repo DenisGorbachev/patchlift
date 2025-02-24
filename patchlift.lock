@@ -1,17 +1,20 @@
-[
-  {
-    "repo": "https://github.com/DenisGorbachev/url-macro",
-    "path": "commitlint.config.mjs",
-    "commit": "dcacccc7a2a3e8c8a22726060d31f652dcc71dd5"
-  },
-  {
-    "repo": "https://github.com/DenisGorbachev/url-macro",
-    "path": "LICENSE-APACHE",
-    "commit": "dcacccc7a2a3e8c8a22726060d31f652dcc71dd5"
-  },
-  {
-    "repo": "https://github.com/DenisGorbachev/url-macro",
-    "path": "LICENSE-MIT",
-    "commit": "dcacccc7a2a3e8c8a22726060d31f652dcc71dd5"
-  }
-]
+{
+  "version": 1,
+  "rpcs": [
+    {
+      "repo": "https://github.com/DenisGorbachev/url-macro",
+      "path": "commitlint.config.mjs",
+      "commit": "dcacccc7a2a3e8c8a22726060d31f652dcc71dd5"
+    },
+    {
+      "repo": "https://github.com/DenisGorbachev/url-macro",
+      "path": "LICENSE-APACHE",
+      "commit": "dcacccc7a2a3e8c8a22726060d31f652dcc71dd5"
+    },
+    {
+      "repo": "https://github.com/DenisGorbachev/url-macro",
+      "path": "LICENSE-MIT",
+      "commit": "dcacccc7a2a3e8c8a22726060d31f652dcc71dd5"
+    }
+  ]
+}
