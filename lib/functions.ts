@@ -1,10 +1,19 @@
 import { $ } from "npm:zx@8.3.2"
 import type { AsDir } from "./interfaces/AsDir.ts"
 import { dirname, SEPARATOR } from "jsr:@std/path@0.224.0"
+import { readAll } from "jsr:@std/io@0.225.2"
+import type { Target } from "./classes/Target.ts"
+import type { RepoPathCommit } from "./classes/RepoPathCommit.ts"
+import type { RepoSource } from "./classes/RepoSource.ts"
 
 export const isGitRepo = async (dir: string) => {
   const output = await $({ cwd: dir })`git rev-parse --is-inside-work-tree`
   return output.text().trim() === "true"
+}
+
+export const isGitRepoClean = async (dir: string) => {
+  const output = await $({ cwd: dir })`git status --porcelain`
+  return output.text().trim() === ""
 }
 
 export const ensure = <T>(value: T | null | undefined, err: () => Error) => {
@@ -13,6 +22,10 @@ export const ensure = <T>(value: T | null | undefined, err: () => Error) => {
   } else {
     return value
   }
+}
+
+export function stub<T>(message = "Implement me"): T {
+  throw new Error(message)
 }
 
 export const copyOne = (from: AsDir, to: AsDir) => async (path: string) => {
@@ -31,3 +44,60 @@ export const miseTrust = (target: string) => $({ cwd: target })`mise trust ${tar
 
 // Test that everything works
 export const lefthookRunPreCommit = (target: string) => $({ cwd: target })`lefthook run -f pre-commit`
+
+export const lockfile = (dir: string) => dir + SEPARATOR + "patchlift.lock"
+
+export const withFile = async (path: string, callback: (contentOld: string) => Promise<string>) => {
+  using file = await Deno.open(path, { read: true, write: true, create: true })
+  await file.lock(true)
+  const decoder = new TextDecoder("utf-8")
+  const contentOldArray = await readAll(file)
+  const contentOldString = decoder.decode(contentOldArray)
+  const encoder = new TextEncoder()
+  const contentNewString = await callback(contentOldString)
+  const contentNewArray = encoder.encode(contentNewString)
+  await file.truncate()
+  await file.write(contentNewArray)
+  await file.unlock()
+}
+
+// source & paths are needed (we can't read them from lockfile) because the user should set them in `patchlift.ts`, not in `patchlift.lock`
+// TODO: extend RepoPathCommit to Branch
+export const applyPatches = (source: RepoSource, paths: string[]) => async (target: Target) => {
+  const targetSh = target.asShell()
+  const sourceSh = source.asShell()
+  const sourceHead = (await sourceSh`git rev-parse HEAD`).text()
+  await withFile(target.lockfile(), async (contentOld) => {
+    const rpcs = RepoPathCommit.createManyFromJSON(JSON.parse(contentOld))
+    // const repos = rpcs.map(rpc => rpc.repo)
+    // const sources = await Promise.all(repos.map(RepoSource.create))
+    const promises = paths.map(async (path) => {
+      // NOTE: Can't ask for user input in this function because it is called by `withFile`, which must
+      const rpc = rpcs.find((rpc) => rpc.repo === source.repoUrl && rpc.path === path)
+      console.log("rpc", rpc)
+      const revisionSpecifier = rpc ? `${rpc.commit}..${sourceHead}` : `--root HEAD`
+      const formatPatchProcessOutput = await sourceSh`git format-patch --stdout ${revisionSpecifier} -- ${path}`
+      const patch = formatPatchProcessOutput.text()
+      console.log("patch", patch)
+      const patchFilePath = await Deno.makeTempFile({
+        prefix: "patch",
+      })
+      console.log("patchFilePath", patchFilePath)
+      await Deno.writeTextFile(patchFilePath, patch)
+      const answer = prompt(`Applying patch from ${patchFilePath} on ${path}. Continue? (Y/n)`)
+      if (answer === "" || answer === "Y") {
+        await targetSh`git apply ${patchFilePath}`
+        if (rpc) {
+          rpc.commit = sourceHead
+        } else {
+          rpcs.push(RepoPathCommit.create(source.repoUrl, path, sourceHead))
+        }
+      }
+    })
+    await Promise.all(promises)
+    return JSON.stringify(rpcs)
+  })
+}
+
+// export const markAsCurrent = (source: LocalRepoSource, target: Target) => async (paths: string[]) => {
+// }

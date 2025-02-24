@@ -1,16 +1,20 @@
 import type { AsDir } from "../interfaces/AsDir.ts"
 import { exists } from "jsr:@std/fs@0.224.0"
 
-import { copyAll, copyOne, isGitRepo, lefthookRunPreCommit, miseTrust } from "../functions.ts"
+import { copyAll, copyOne, isGitRepo, isGitRepoClean, lefthookRunPreCommit, lockfile, miseTrust } from "../functions.ts"
+import { $ } from "npm:zx@8.3.2"
+import type { AsShell } from "../interfaces/Shell.ts"
 
-export class Target implements AsDir {
-  private constructor(public dir: string) {}
+export class Target implements AsDir, AsShell {
+  private constructor(public dir: string) {
+  }
 
   static async create(dir: string | undefined) {
     if (!dir) throw new Error("Target is required")
     if (!await exists(dir)) throw new Error(`Target must exist: ${dir}`)
     if (!(await Deno.stat(dir)).isDirectory) throw new Error(`Target must be a directory: ${dir}`)
-    if (!await isGitRepo(dir)) throw new Error(`Target must contain a git repository: ${dir}`)
+    if (!await isGitRepo(dir)) throw new Error(`Target must be a git repository: ${dir}`)
+    if (!await isGitRepoClean(dir)) throw new Error(`Target must be a clean git repository (no uncommitted changes): ${dir}`)
     return new Target(dir)
   }
 
@@ -20,6 +24,10 @@ export class Target implements AsDir {
 
   asDir() {
     return this.dir
+  }
+
+  asShell() {
+    return $({ cwd: this.asDir(), verbose: !!Deno.env.get("PATCHLIFT_VERBOSE") })
   }
 
   miseTrust() {
@@ -36,5 +44,9 @@ export class Target implements AsDir {
 
   copyAll(from: AsDir) {
     return copyAll(from, this)
+  }
+
+  lockfile() {
+    return lockfile(this.dir)
   }
 }

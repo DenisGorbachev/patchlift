@@ -1,21 +1,17 @@
 import type { AsDir } from "../interfaces/AsDir.ts"
-import { exists } from "jsr:@std/fs@0.224.0"
 import { $ } from "npm:zx@8.3.2"
+import type { AsShell } from "../interfaces/Shell.ts"
 
-export class RepoSource implements AsDir {
-  private constructor(public dir: string) {
+export class RepoSource implements AsDir, AsShell {
+  private constructor(public repoUrl: string, public dir: string) {
   }
 
-  static async create(localPath: string, repoUrl: string) {
-    if (await exists(localPath)) {
-      return new RepoSource(localPath)
-    } else {
-      const repoDir = await Deno.makeTempDir({
-        prefix: "git-clone-",
-      })
-      await $`git clone --depth 1 ${repoUrl} ${repoDir}`
-      return new RepoSource(repoDir)
-    }
+  static async create(repoUrl: string) {
+    const dir = await Deno.makeTempDir({
+      prefix: "git-clone-",
+    })
+    await $`git clone --depth 1 ${repoUrl} ${dir}`
+    return new RepoSource(repoUrl, dir)
   }
 
   toString() {
@@ -25,6 +21,10 @@ export class RepoSource implements AsDir {
   asDir() {
     return this.dir
   }
+
+  asShell() {
+    return $({ cwd: this.asDir(), verbose: !!Deno.env.get("PATCHLIFT_VERBOSE") })
+  }
 }
 
-export const createUrlMacroRepoSource = () => RepoSource.create(Deno.env.get("HOME") + "/workspace/url-macro", "https://github.com/DenisGorbachev/url-macro")
+export const createUrlMacroRepoSource = () => RepoSource.create("https://github.com/DenisGorbachev/url-macro")
