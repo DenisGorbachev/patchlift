@@ -1,4 +1,4 @@
-import { z } from "https://deno.land/x/zod@v3.23.8/mod.ts"
+import { z } from "npm:zod@3.24.2"
 import { RepoPathCommit, RepoPathCommitObjectsSchema } from "./RepoPathCommit.ts"
 
 export class Lockfile {
