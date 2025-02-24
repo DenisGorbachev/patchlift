@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno run --allow-write --allow-read --allow-run=bash,git,cargo --allow-net=docs.rs:443 --allow-env --allow-sys --no-lock
+#!/usr/bin/env -S deno run --allow-write --allow-read --allow-run=bash --allow-net --allow-env --allow-sys --no-lock
 
 import { COMMITLINT, createUrlMacroLocalRepoSource, LICENSES_APACHE_MIT, Target } from "./index.ts"
 import { applyPatches } from "./lib/functions.ts"
