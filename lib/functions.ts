@@ -3,7 +3,7 @@ import type { AsDir } from "./interfaces/AsDir.ts"
 import { dirname, SEPARATOR } from "jsr:@std/path@0.224.0"
 import { readAll } from "jsr:@std/io@0.225.2"
 import type { Target } from "./classes/Target.ts"
-import type { RepoPathCommit } from "./classes/RepoPathCommit.ts"
+import { RepoPathCommit } from "./classes/RepoPathCommit.ts"
 import type { RepoSource } from "./classes/RepoSource.ts"
 
 export const isGitRepo = async (dir: string) => {
