@@ -28,6 +28,9 @@ run = "mise run remark ."
 [tasks."check"]
 run = "deno check ."
 
+[tasks."publish"]
+run = "deno publish --allow-slow-types"
+
 [tasks."remark"]
 run = """
 #!/usr/bin/env bash
