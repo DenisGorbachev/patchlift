@@ -4,6 +4,7 @@ import { RepoSource } from "./RepoSource.ts"
 import type { AsRepoUrl } from "../interfaces/AsRepoUrl.ts"
 import type { AsShell } from "../interfaces/AsShell.ts"
 import { $ } from "npm:zx@8.3.2"
+import { verbose } from "../vars.ts"
 
 export class LocalRepoSource implements AsDir, AsShell, AsRepoUrl {
   private constructor(public localDir: string, public repoUrl: string, public rs: RepoSource | undefined) {
@@ -27,7 +28,7 @@ export class LocalRepoSource implements AsDir, AsShell, AsRepoUrl {
   }
 
   asShell() {
-    return $({ cwd: this.asDir(), verbose: !!Deno.env.get("PATCHLIFT_VERBOSE") })
+    return $({ cwd: this.asDir(), verbose: verbose })
   }
 
   asRepoUrl(): string {

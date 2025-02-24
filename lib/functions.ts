@@ -67,7 +67,7 @@ interface ApplyPatchSource extends AsShell, AsRepoUrl {
 
 // source & paths are needed (we can't read them from lockfile) because the user should set them in `patchlift.ts`, not in `patchlift.lock`
 // TODO: extend RepoPathCommit to Branch
-export const applyPatches = (source: ApplyPatchSource, paths: string[]) => async (target: Target) => {
+export const applyPatches = (source: ApplyPatchSource, paths: string[]) => async (target: Target, doApply: boolean = true) => {
   const targetSh = target.asShell()
   const sourceSh = source.asShell()
   const sourceHead = (await sourceSh`git rev-parse HEAD`).text().trim()
@@ -90,9 +90,12 @@ export const applyPatches = (source: ApplyPatchSource, paths: string[]) => async
       })
       console.log("patchFilePath", patchFilePath)
       await Deno.writeTextFile(patchFilePath, patch)
-      const answer = prompt(`Applying patch from ${patchFilePath} on ${path}. Continue? (Y/n)`)
+      const action = doApply ? `Applying patch from ${patchFilePath} on ${path}.` : `Skipping patch on ${path} (assuming it was already applied).`
+      const answer = prompt(`${action} Continue? (Y/n)`)
       if (answer === "" || answer === "Y") {
-        await targetSh`git apply ${patchFilePath}`
+        if (doApply) {
+          await targetSh`git apply ${patchFilePath}`
+        }
         if (rpc) {
           rpc.commit = sourceHead
         } else {
@@ -101,9 +104,6 @@ export const applyPatches = (source: ApplyPatchSource, paths: string[]) => async
       }
     })
     await Promise.all(promises)
-    return JSON.stringify(rpcs)
+    return JSON.stringify(rpcs, undefined, 2)
   })
 }
-
-// export const markAsCurrent = (source: LocalRepoSource, target: Target) => async (paths: string[]) => {
-// }
