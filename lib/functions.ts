@@ -68,7 +68,7 @@ export const applyPatches = (source: RepoSource, paths: string[]) => async (targ
   const sourceSh = source.asShell()
   const sourceHead = (await sourceSh`git rev-parse HEAD`).text()
   await withFile(target.lockfile(), async (contentOld) => {
-    const rpcs = RepoPathCommit.createManyFromJSON(JSON.parse(contentOld))
+    const rpcs = contentOld ? RepoPathCommit.createManyFromJSON(JSON.parse(contentOld)) : []
     // const repos = rpcs.map(rpc => rpc.repo)
     // const sources = await Promise.all(repos.map(RepoSource.create))
     const promises = paths.map(async (path) => {
