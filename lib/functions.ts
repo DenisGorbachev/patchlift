@@ -75,8 +75,9 @@ export const applyPatches = (source: RepoSource, paths: string[]) => async (targ
       // NOTE: Can't ask for user input in this function because it is called by `withFile`, which must
       const rpc = rpcs.find((rpc) => rpc.repo === source.repoUrl && rpc.path === path)
       console.log("rpc", rpc)
-      const revisionSpecifier = rpc ? `${rpc.commit}..${sourceHead}` : `--root HEAD`
-      const formatPatchProcessOutput = await sourceSh`git format-patch --stdout ${revisionSpecifier} -- ${path}`
+      const rootFlag = rpc ? "" : "--root"
+      const revisionRange = rpc ? `${rpc.commit}..${sourceHead}` : sourceHead
+      const formatPatchProcessOutput = await sourceSh`git format-patch --stdout ${rootFlag} ${revisionRange} -- ${path}`
       const patch = formatPatchProcessOutput.text()
       console.log("patch", patch)
       const patchFilePath = await Deno.makeTempFile({
