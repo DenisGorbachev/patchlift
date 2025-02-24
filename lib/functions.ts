@@ -7,6 +7,7 @@ import { RepoPathCommit } from "./classes/RepoPathCommit.ts"
 import type { AsShell } from "./interfaces/AsShell.ts"
 import type { AsRepoUrl } from "./interfaces/AsRepoUrl.ts"
 import { doApply } from "./vars.ts"
+import { Lockfile } from "./classes/Lockfile.ts"
 
 export const isGitRepo = async (dir: string) => {
   const output = await $({ cwd: dir })`git rev-parse --is-inside-work-tree`
@@ -59,6 +60,7 @@ export const withFile = async (path: string, callback: (contentOld: string) => P
   const contentNewString = await callback(contentOldString)
   const contentNewArray = encoder.encode(contentNewString)
   await file.truncate()
+  await file.seek(0, Deno.SeekMode.Start)
   await file.write(contentNewArray)
   await file.unlock()
 }
@@ -73,12 +75,12 @@ export const applyPatches = (source: ApplyPatchSource, paths: string[]) => async
   const sourceSh = source.asShell()
   const sourceHead = (await sourceSh`git rev-parse HEAD`).text().trim()
   await withFile(target.lockfile(), async (contentOld) => {
-    const rpcs = contentOld ? RepoPathCommit.createManyFromJSON(JSON.parse(contentOld)) : []
+    const lockfile = Lockfile.fromString(contentOld)
     // const repos = rpcs.map(rpc => rpc.repo)
     // const sources = await Promise.all(repos.map(RepoSource.create))
     const promises = paths.map(async (path) => {
       // NOTE: Can't ask for user input in this function because it is called by `withFile`, which must
-      const rpc = rpcs.find((rpc) => rpc.repo === source.asRepoUrl() && rpc.path === path)
+      const rpc = lockfile.rpcs.find((rpc) => rpc.repo === source.asRepoUrl() && rpc.path === path)
       console.log("rpc", rpc)
       const rootFlag = rpc ? "" : "--root"
       const revisionRange = rpc ? `${rpc.commit}..${sourceHead}` : sourceHead
@@ -100,11 +102,11 @@ export const applyPatches = (source: ApplyPatchSource, paths: string[]) => async
         if (rpc) {
           rpc.commit = sourceHead
         } else {
-          rpcs.push(RepoPathCommit.create(source.asRepoUrl(), path, sourceHead))
+          lockfile.rpcs.push(RepoPathCommit.create(source.asRepoUrl(), path, sourceHead))
         }
       }
     })
     await Promise.all(promises)
-    return JSON.stringify(rpcs, undefined, 2)
+    return lockfile.toString()
   })
 }
