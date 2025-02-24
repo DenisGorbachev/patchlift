@@ -3,7 +3,7 @@ import { exists } from "jsr:@std/fs@0.224.0"
 
 import { copyAll, copyOne, isGitRepo, isGitRepoClean, lefthookRunPreCommit, lockfile, miseTrust } from "../functions.ts"
 import { $ } from "npm:zx@8.3.2"
-import type { AsShell } from "../interfaces/Shell.ts"
+import type { AsShell } from "../interfaces/AsShell.ts"
 
 export class Target implements AsDir, AsShell {
   private constructor(public dir: string) {

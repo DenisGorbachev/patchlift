@@ -4,7 +4,8 @@ import { dirname, SEPARATOR } from "jsr:@std/path@0.224.0"
 import { readAll } from "jsr:@std/io@0.225.2"
 import type { Target } from "./classes/Target.ts"
 import { RepoPathCommit } from "./classes/RepoPathCommit.ts"
-import type { RepoSource } from "./classes/RepoSource.ts"
+import type { AsShell } from "./interfaces/AsShell.ts"
+import type { AsRepoUrl } from "./interfaces/AsRepoUrl.ts"
 
 export const isGitRepo = async (dir: string) => {
   const output = await $({ cwd: dir })`git rev-parse --is-inside-work-tree`
@@ -61,9 +62,12 @@ export const withFile = async (path: string, callback: (contentOld: string) => P
   await file.unlock()
 }
 
+interface ApplyPatchSource extends AsShell, AsRepoUrl {
+}
+
 // source & paths are needed (we can't read them from lockfile) because the user should set them in `patchlift.ts`, not in `patchlift.lock`
 // TODO: extend RepoPathCommit to Branch
-export const applyPatches = (source: RepoSource, paths: string[]) => async (target: Target) => {
+export const applyPatches = (source: ApplyPatchSource, paths: string[]) => async (target: Target) => {
   const targetSh = target.asShell()
   const sourceSh = source.asShell()
   const sourceHead = (await sourceSh`git rev-parse HEAD`).text()
@@ -73,7 +77,7 @@ export const applyPatches = (source: RepoSource, paths: string[]) => async (targ
     // const sources = await Promise.all(repos.map(RepoSource.create))
     const promises = paths.map(async (path) => {
       // NOTE: Can't ask for user input in this function because it is called by `withFile`, which must
-      const rpc = rpcs.find((rpc) => rpc.repo === source.repoUrl && rpc.path === path)
+      const rpc = rpcs.find((rpc) => rpc.repo === source.asRepoUrl() && rpc.path === path)
       console.log("rpc", rpc)
       const rootFlag = rpc ? "" : "--root"
       const revisionRange = rpc ? `${rpc.commit}..${sourceHead}` : sourceHead
@@ -91,7 +95,7 @@ export const applyPatches = (source: RepoSource, paths: string[]) => async (targ
         if (rpc) {
           rpc.commit = sourceHead
         } else {
-          rpcs.push(RepoPathCommit.create(source.repoUrl, path, sourceHead))
+          rpcs.push(RepoPathCommit.create(source.asRepoUrl(), path, sourceHead))
         }
       }
     })

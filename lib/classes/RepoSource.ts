@@ -1,8 +1,9 @@
 import type { AsDir } from "../interfaces/AsDir.ts"
 import { $ } from "npm:zx@8.3.2"
-import type { AsShell } from "../interfaces/Shell.ts"
+import type { AsShell } from "../interfaces/AsShell.ts"
+import type { AsRepoUrl } from "../interfaces/AsRepoUrl.ts"
 
-export class RepoSource implements AsDir, AsShell {
+export class RepoSource implements AsDir, AsShell, AsRepoUrl {
   private constructor(public repoUrl: string, public dir: string) {
   }
 
@@ -24,6 +25,10 @@ export class RepoSource implements AsDir, AsShell {
 
   asShell() {
     return $({ cwd: this.asDir(), verbose: !!Deno.env.get("PATCHLIFT_VERBOSE") })
+  }
+
+  asRepoUrl(): string {
+    return this.repoUrl
   }
 }
 
