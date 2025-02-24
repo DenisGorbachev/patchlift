@@ -4,7 +4,7 @@ import { COMMITLINT, createUrlMacroLocalRepoSource, LICENSES_APACHE_MIT, Target 
 import { applyPatches } from "./lib/functions.ts"
 
 const source = await createUrlMacroLocalRepoSource()
-const target = await Target.create(import.meta.dirname)
+const target = await Target.create(import.meta.dirname, true)
 
 await applyPatches(source, [
   ...COMMITLINT,

@@ -11,7 +11,7 @@ export class RepoSource implements AsDir, AsShell, AsRepoUrl {
     const dir = await Deno.makeTempDir({
       prefix: "git-clone-",
     })
-    await $`git clone --depth 1 ${repoUrl} ${dir}`
+    await $`git clone ${repoUrl} ${dir}`
     return new RepoSource(repoUrl, dir)
   }
 

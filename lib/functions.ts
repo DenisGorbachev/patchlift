@@ -70,7 +70,7 @@ interface ApplyPatchSource extends AsShell, AsRepoUrl {
 export const applyPatches = (source: ApplyPatchSource, paths: string[]) => async (target: Target) => {
   const targetSh = target.asShell()
   const sourceSh = source.asShell()
-  const sourceHead = (await sourceSh`git rev-parse HEAD`).text()
+  const sourceHead = (await sourceSh`git rev-parse HEAD`).text().trim()
   await withFile(target.lockfile(), async (contentOld) => {
     const rpcs = contentOld ? RepoPathCommit.createManyFromJSON(JSON.parse(contentOld)) : []
     // const repos = rpcs.map(rpc => rpc.repo)
@@ -81,6 +81,7 @@ export const applyPatches = (source: ApplyPatchSource, paths: string[]) => async
       console.log("rpc", rpc)
       const rootFlag = rpc ? "" : "--root"
       const revisionRange = rpc ? `${rpc.commit}..${sourceHead}` : sourceHead
+      console.log("revisionRange", revisionRange)
       const formatPatchProcessOutput = await sourceSh`git format-patch --stdout ${rootFlag} ${revisionRange} -- ${path}`
       const patch = formatPatchProcessOutput.text()
       console.log("patch", patch)

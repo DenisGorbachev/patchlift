@@ -9,4 +9,4 @@
     - `mise.toml` contains local tools
 - Some programs require the configs to be available on disk
   - `mise` requires `mise.toml` to execute the tasks
-- A developer may edit the file directly. His/her changes will be overwritten by `setup.ts`.
+- A developer may edit the file directly. His/her changes will be overwritten by `patchlift.ts`.

@@ -9,12 +9,12 @@ export class Target implements AsDir, AsShell {
   private constructor(public dir: string) {
   }
 
-  static async create(dir: string | undefined) {
+  static async create(dir: string | undefined, allowDirty: boolean = false) {
     if (!dir) throw new Error("Target is required")
     if (!await exists(dir)) throw new Error(`Target must exist: ${dir}`)
     if (!(await Deno.stat(dir)).isDirectory) throw new Error(`Target must be a directory: ${dir}`)
     if (!await isGitRepo(dir)) throw new Error(`Target must be a git repository: ${dir}`)
-    if (!await isGitRepoClean(dir)) throw new Error(`Target must be a clean git repository (no uncommitted changes): ${dir}`)
+    if (!allowDirty && !await isGitRepoClean(dir)) throw new Error(`Target must be a clean git repository (no uncommitted changes): ${dir}`)
     return new Target(dir)
   }
 
