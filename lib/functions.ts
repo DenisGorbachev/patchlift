@@ -6,6 +6,7 @@ import type { Target } from "./classes/Target.ts"
 import { RepoPathCommit } from "./classes/RepoPathCommit.ts"
 import type { AsShell } from "./interfaces/AsShell.ts"
 import type { AsRepoUrl } from "./interfaces/AsRepoUrl.ts"
+import { doApply } from "./vars.ts"
 
 export const isGitRepo = async (dir: string) => {
   const output = await $({ cwd: dir })`git rev-parse --is-inside-work-tree`
@@ -67,7 +68,7 @@ interface ApplyPatchSource extends AsShell, AsRepoUrl {
 
 // source & paths are needed (we can't read them from lockfile) because the user should set them in `patchlift.ts`, not in `patchlift.lock`
 // TODO: extend RepoPathCommit to Branch
-export const applyPatches = (source: ApplyPatchSource, paths: string[]) => async (target: Target, doApply: boolean = true) => {
+export const applyPatches = (source: ApplyPatchSource, paths: string[]) => async (target: Target) => {
   const targetSh = target.asShell()
   const sourceSh = source.asShell()
   const sourceHead = (await sourceSh`git rev-parse HEAD`).text().trim()
