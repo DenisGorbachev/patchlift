@@ -8,6 +8,7 @@ import type { AsShell } from "./interfaces/AsShell.ts"
 import type { AsRepoUrl } from "./interfaces/AsRepoUrl.ts"
 import { doApply } from "./vars.ts"
 import { Lockfile } from "./classes/Lockfile.ts"
+import { Input } from "jsr:@cliffy/prompt@1.0.0-rc.7"
 
 export const isGitRepo = async (dir: string) => {
   const output = await $({ cwd: dir })`git rev-parse --is-inside-work-tree`
@@ -81,20 +82,16 @@ export const applyPatches = (source: ApplyPatchSource, paths: string[]) => async
     const promises = paths.map(async (path) => {
       // NOTE: Can't ask for user input in this function because it is called by `withFile`, which must
       const rpc = lockfile.rpcs.find((rpc) => rpc.repo === source.asRepoUrl() && rpc.path === path)
-      console.log("rpc", rpc)
       const rootFlag = rpc ? "" : "--root"
       const revisionRange = rpc ? `${rpc.commit}..${sourceHead}` : sourceHead
-      console.log("revisionRange", revisionRange)
       const formatPatchProcessOutput = await sourceSh`git format-patch --stdout ${rootFlag} ${revisionRange} -- ${path}`
       const patch = formatPatchProcessOutput.text()
-      console.log("patch", patch)
       const patchFilePath = await Deno.makeTempFile({
         prefix: "patch",
       })
-      console.log("patchFilePath", patchFilePath)
       await Deno.writeTextFile(patchFilePath, patch)
       const action = doApply ? `Applying patch from ${patchFilePath} on ${path}.` : `Skipping patch on ${path} (assuming it was already applied).`
-      const answer = prompt(`${action} Continue? (Y/n)`)
+      const answer = await Input.prompt(`${action} Continue? (Y/n)`)
       if (answer === "" || answer === "Y") {
         if (doApply) {
           await targetSh`git apply ${patchFilePath}`
@@ -106,7 +103,10 @@ export const applyPatches = (source: ApplyPatchSource, paths: string[]) => async
         }
       }
     })
-    await Promise.all(promises)
+    // await sequentially to allow the user to make decisions
+    for (const promise of promises) {
+      await promise
+    }
     return lockfile.toString()
   })
 }
