@@ -20,7 +20,7 @@ depends = ["lint:code", "lint:docs"]
 run = "deno test"
 
 [tasks."lint:code"]
-run = "deno lint"
+run = "deno lint --fix"
 
 [tasks."lint:docs"]
 run = "mise run remark ."

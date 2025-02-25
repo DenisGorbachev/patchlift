@@ -6,9 +6,9 @@ import type { Target } from "./classes/Target.ts"
 import { RepoPathCommit } from "./classes/RepoPathCommit.ts"
 import type { AsShell } from "./interfaces/AsShell.ts"
 import type { AsRepoUrl } from "./interfaces/AsRepoUrl.ts"
-import { doApply } from "./vars.ts"
 import { Lockfile } from "./classes/Lockfile.ts"
-import { Input } from "jsr:@cliffy/prompt@1.0.0-rc.7"
+import { Input, type InputOptions } from "jsr:@cliffy/prompt@1.0.0-rc.7"
+import { copy } from "jsr:@std/fs@0.224.0"
 
 export const isGitRepo = async (dir: string) => {
   const output = await $({ cwd: dir })`git rev-parse --is-inside-work-tree`
@@ -66,7 +66,12 @@ export const withFile = async (path: string, callback: (contentOld: string) => P
   await file.unlock()
 }
 
-interface ApplyPatchSource extends AsShell, AsRepoUrl {
+interface ApplyPatchSource extends AsShell, AsRepoUrl, AsDir {
+}
+
+async function getBooleanInput(options: string | InputOptions) {
+  const answer = await Input.prompt(options)
+  return answer === "" || answer === "Y"
 }
 
 // source & paths are needed (we can't read them from lockfile) because the user should set them in `patchlift.ts`, not in `patchlift.lock`
@@ -81,24 +86,26 @@ export const applyPatches = (source: ApplyPatchSource, paths: string[]) => async
     for (const path of paths) {
       // NOTE: Can't ask for user input in this function because it is called by `withFile`, which must
       const rpc = lockfile.rpcs.find((rpc) => rpc.repo === source.asRepoUrl() && rpc.path === path)
-      const rootFlag = rpc ? "" : "--root"
-      const revisionRange = rpc ? `${rpc.commit}..${sourceHead}` : sourceHead
-      const formatPatchProcessOutput = await sourceSh`git format-patch --stdout ${rootFlag} ${revisionRange} -- ${path}`
-      const patch = formatPatchProcessOutput.text()
-      const patchFilePath = await Deno.makeTempFile({
-        prefix: "patch",
-      })
-      await Deno.writeTextFile(patchFilePath, patch)
-      const action = doApply ? `Applying patch from ${patchFilePath} on ${path}.` : `Skipping patch on ${path} (assuming it was already applied).`
-      const answer = await Input.prompt(`${action} Continue? (Y/n)`)
-      if (answer === "" || answer === "Y") {
-        if (doApply) {
+      if (rpc) {
+        const revisionRange = `${rpc.commit}..${sourceHead}`
+        const formatPatchProcessOutput = await sourceSh`git format-patch --stdout ${revisionRange} -- ${path}`
+        const patch = formatPatchProcessOutput.text()
+        const patchFilePath = await Deno.makeTempFile({
+          prefix: "patch",
+        })
+        await Deno.writeTextFile(patchFilePath, patch)
+        if (await getBooleanInput(`Applying patch from ${patchFilePath} on ${path}. Continue? (Y/n)`)) {
           await targetSh`git apply ${patchFilePath}`
-        }
-        if (rpc) {
           rpc.commit = sourceHead
         } else {
+          console.info("Cancelled by user")
+        }
+      } else {
+        if (await getBooleanInput(`${path} does not have a corresponding commit in a lockfile. Copy the path from source? (Y/n)`)) {
+          await copy(source.asDir() + SEPARATOR + path, target.asDir() + SEPARATOR + path)
           lockfile.rpcs.push(RepoPathCommit.create(source.asRepoUrl(), path, sourceHead))
+        } else {
+          console.info("Cancelled by user")
         }
       }
     }
