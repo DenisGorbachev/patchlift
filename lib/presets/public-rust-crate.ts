@@ -7,7 +7,7 @@ const urlMacroSource = await createUrlMacroLocalRepoSource()
 
 export const applyToPublicRustCrate = applyPatches(urlMacroSource, RUST_PUBLIC)
 
-export const applyToPublicRustCrateDir = async (targetDir: string) => {
+export const applyToPublicRustCrateDir = async (targetDir: string | undefined) => {
   const target = await Target.create(targetDir)
   return applyPatches(urlMacroSource, RUST_PUBLIC)(target)
 }
