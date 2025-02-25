@@ -77,9 +77,8 @@ export const applyPatches = (source: ApplyPatchSource, paths: string[]) => async
   const sourceHead = (await sourceSh`git rev-parse HEAD`).text().trim()
   await withFile(target.lockfile(), async (contentOld) => {
     const lockfile = Lockfile.fromString(contentOld)
-    // const repos = rpcs.map(rpc => rpc.repo)
-    // const sources = await Promise.all(repos.map(RepoSource.create))
-    const promises = paths.map(async (path) => {
+    // await sequentially to allow the user to make decisions
+    for (const path of paths) {
       // NOTE: Can't ask for user input in this function because it is called by `withFile`, which must
       const rpc = lockfile.rpcs.find((rpc) => rpc.repo === source.asRepoUrl() && rpc.path === path)
       const rootFlag = rpc ? "" : "--root"
@@ -102,10 +101,6 @@ export const applyPatches = (source: ApplyPatchSource, paths: string[]) => async
           lockfile.rpcs.push(RepoPathCommit.create(source.asRepoUrl(), path, sourceHead))
         }
       }
-    })
-    // await sequentially to allow the user to make decisions
-    for (const promise of promises) {
-      await promise
     }
     return lockfile.toString()
   })
