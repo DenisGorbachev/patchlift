@@ -102,7 +102,7 @@ export const applyPatches = (source: ApplyPatchSource, paths: string[]) => async
         }
       } else {
         if (await getBooleanInput(`${path} does not have a corresponding commit in a lockfile. Copy the path from source? (Y/n)`)) {
-          await copy(source.asDir() + SEPARATOR + path, target.asDir() + SEPARATOR + path)
+          await copy(source.asDir() + SEPARATOR + path, target.asDir() + SEPARATOR + path, { overwrite: true })
           lockfile.rpcs.push(RepoPathCommit.create(source.asRepoUrl(), path, sourceHead))
         } else {
           console.info("Cancelled by user")
