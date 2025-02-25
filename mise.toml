@@ -32,9 +32,12 @@ run = "deno check ."
 run = """
 #!/usr/bin/env bash
 set -euo pipefail
-deno run --allow-read=deno.json --allow-write=deno.json --allow-run=git jsr:@kellnerd/bump --commit "chore: bump version "
+mise run bump
 deno publish --allow-slow-types
 """
+
+[tasks."bump"]
+run = "deno run --allow-read=deno.json --allow-write=deno.json --allow-run=git jsr:@kellnerd/bump --commit \"chore: bump version \""
 
 [tasks."remark"]
 run = """
