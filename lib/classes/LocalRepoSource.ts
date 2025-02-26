@@ -1,12 +1,10 @@
-import type { AsDir } from "../interfaces/AsDir.ts"
 import { exists } from "jsr:@std/fs@0.224.0"
 import { RepoSource } from "./RepoSource.ts"
-import type { AsRepoUrl } from "../interfaces/AsRepoUrl.ts"
-import type { AsShell } from "../interfaces/AsShell.ts"
 import { $ } from "npm:zx@8.3.2"
 import { verbose } from "../vars.ts"
+import type { SourceLike } from "../interfaces/SourceLike.ts"
 
-export class LocalRepoSource implements AsDir, AsShell, AsRepoUrl {
+export class LocalRepoSource implements SourceLike {
   private constructor(public localDir: string, public repoUrl: string, public rs: RepoSource | undefined) {
   }
 

@@ -1,10 +1,8 @@
-import type { AsDir } from "../interfaces/AsDir.ts"
 import { $ } from "npm:zx@8.3.2"
-import type { AsShell } from "../interfaces/AsShell.ts"
-import type { AsRepoUrl } from "../interfaces/AsRepoUrl.ts"
 import { verbose } from "../vars.ts"
+import type { SourceLike } from "../interfaces/SourceLike.ts"
 
-export class RepoSource implements AsDir, AsShell, AsRepoUrl {
+export class RepoSource implements SourceLike {
   private constructor(public repoUrl: string, public dir: string) {
   }
 

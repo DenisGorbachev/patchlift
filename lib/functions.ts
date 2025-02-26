@@ -2,13 +2,12 @@ import { $ } from "npm:zx@8.3.2"
 import type { AsDir } from "./interfaces/AsDir.ts"
 import { dirname, SEPARATOR } from "jsr:@std/path@0.224.0"
 import { readAll } from "jsr:@std/io@0.225.2"
-import type { Target } from "./classes/Target.ts"
+import { Target } from "./classes/Target.ts"
 import { RepoPathCommit } from "./classes/RepoPathCommit.ts"
-import type { AsShell } from "./interfaces/AsShell.ts"
-import type { AsRepoUrl } from "./interfaces/AsRepoUrl.ts"
 import { Lockfile } from "./classes/Lockfile.ts"
 import { Input, type InputOptions } from "jsr:@cliffy/prompt@1.0.0-rc.7"
 import { copy } from "jsr:@std/fs@0.224.0"
+import type { SourceLike } from "./interfaces/SourceLike.ts"
 
 export const isGitRepo = async (dir: string) => {
   const output = await $({ cwd: dir })`git rev-parse --is-inside-work-tree`
@@ -66,9 +65,6 @@ export const withFile = async (path: string, callback: (contentOld: string) => P
   await file.unlock()
 }
 
-interface ApplyPatchSource extends AsShell, AsRepoUrl, AsDir {
-}
-
 async function getBooleanInput(options: string | InputOptions) {
   const answer = await Input.prompt(options)
   return answer === "" || answer === "Y"
@@ -76,7 +72,7 @@ async function getBooleanInput(options: string | InputOptions) {
 
 // source & paths are needed (we can't read them from lockfile) because the user should set them in `patchlift.ts`, not in `patchlift.lock`
 // TODO: extend RepoPathCommit to Branch
-export const applyPatches = (source: ApplyPatchSource, paths: string[]) => async (target: Target) => {
+export const applyPatches = (source: SourceLike, paths: string[]) => async (target: Target) => {
   const targetSh = target.asShell()
   const sourceSh = source.asShell()
   const sourceHead = (await sourceSh`git rev-parse HEAD`).text().trim()
@@ -111,4 +107,10 @@ export const applyPatches = (source: ApplyPatchSource, paths: string[]) => async
     }
     return lockfile.toString()
   })
+}
+
+export const applyPatchesSTP = async (getSource: () => Promise<SourceLike>, targetDir: string | undefined, paths: string[]) => {
+  const source = await getSource()
+  const target = await Target.create(targetDir)
+  return applyPatches(source, paths)(target)
 }
