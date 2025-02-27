@@ -10,12 +10,12 @@ import type { SourceLike } from "./interfaces/SourceLike.ts"
 import { getBooleanInput } from "./utils.ts"
 
 export const isGitRepo = async (dir: string) => {
-  const output = await $({cwd: dir})`git rev-parse --is-inside-work-tree`
+  const output = await $({ cwd: dir })`git rev-parse --is-inside-work-tree`
   return output.text().trim() === "true"
 }
 
 export const isGitRepoClean = async (dir: string) => {
-  const output = await $({cwd: dir})`git status --porcelain`
+  const output = await $({ cwd: dir })`git status --porcelain`
   return output.text().trim() === ""
 }
 
@@ -35,23 +35,23 @@ export const copyOne = (from: AsDir, to: AsDir) => async (path: string) => {
   const source = from.asDir() + SEPARATOR + path
   const target = to.asDir() + SEPARATOR + path
   const targetParent = dirname(target)
-  await Deno.mkdir(targetParent, {recursive: true})
+  await Deno.mkdir(targetParent, { recursive: true })
   await Deno.copyFile(source, target)
 }
 
 export const copyAll = (from: AsDir, to: AsDir) => (paths: string[]) => Promise.all(paths.map(copyOne(from, to)))
 
-export const getGitRemoteUrl = (target: string) => $({cwd: target})`git remote get-url origin`
+export const getGitRemoteUrl = (target: string) => $({ cwd: target })`git remote get-url origin`
 
-export const miseTrust = (target: string) => $({cwd: target})`mise trust ${target}/mise.toml`
+export const miseTrust = (target: string) => $({ cwd: target })`mise trust ${target}/mise.toml`
 
 // Test that everything works
-export const lefthookRunPreCommit = (target: string) => $({cwd: target})`lefthook run -f pre-commit`
+export const lefthookRunPreCommit = (target: string) => $({ cwd: target })`lefthook run -f pre-commit`
 
 export const lockfile = (dir: string) => dir + SEPARATOR + "patchlift.lock"
 
 export const withFile = async (path: string, callback: (contentOld: string) => Promise<string>) => {
-  using file = await Deno.open(path, {read: true, write: true, create: true})
+  using file = await Deno.open(path, { read: true, write: true, create: true })
   await file.lock(true)
   const decoder = new TextDecoder("utf-8")
   const contentOldArray = await readAll(file)
@@ -106,7 +106,7 @@ export const applyPatches = (source: SourceLike, pathsToCopy: string[], pathsToR
 
       if (fileExists) {
         if (await getBooleanInput(`Remove ${path} from target? (Y/n)`)) {
-          await Deno.remove(targetPath, {recursive: true})
+          await Deno.remove(targetPath, { recursive: true })
           // Remove from lockfile if exists
           lockfile.rpcs = lockfile.rpcs.filter((rpc) => !(rpc.repo === source.asRepoUrl() && rpc.path === path))
           console.info(`Removed ${path}`)
@@ -130,7 +130,7 @@ export const applyPatches = (source: SourceLike, pathsToCopy: string[], pathsToR
         }
       } else {
         if (await getBooleanInput(`${path} does not have a corresponding commit in a lockfile. Copy the path from source? (Y/n)`)) {
-          await copy(source.asDir() + SEPARATOR + path, target.asDir() + SEPARATOR + path, {overwrite: true})
+          await copy(source.asDir() + SEPARATOR + path, target.asDir() + SEPARATOR + path, { overwrite: true })
           lockfile.rpcs.push(RepoPathCommit.create(source.asRepoUrl(), path, sourceHead))
         } else {
           console.info("Cancelled by user")
