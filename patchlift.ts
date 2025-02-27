@@ -9,4 +9,4 @@ const target = await Target.create(import.meta.dirname)
 await applyPatches(source, [
   ...COMMITLINT,
   ...LICENSES_APACHE_MIT,
-])(target)
+], [])(target)

@@ -11,6 +11,7 @@ export const README = ["README.ts", ...DENO]
 export const WORKFLOWS_CI = [".github/workflows/ci.yml"]
 export const WORKFLOWS_RELEASE_PLZ = [".github/workflows/release-plz.yml"]
 export const WORKFLOWS_CI_RELEASE_PLZ = [...WORKFLOWS_CI, ...WORKFLOWS_RELEASE_PLZ]
+export const JUSTFILE = ["Justfile"]
 export const RUST_PUBLIC = unique([
   ...BASIC,
   ...RUST,

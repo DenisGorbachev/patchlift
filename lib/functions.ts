@@ -6,7 +6,7 @@ import { Target } from "./classes/Target.ts"
 import { RepoPathCommit } from "./classes/RepoPathCommit.ts"
 import { Lockfile } from "./classes/Lockfile.ts"
 import { Input, type InputOptions } from "jsr:@cliffy/prompt@1.0.0-rc.7"
-import { copy } from "jsr:@std/fs@0.224.0"
+import { copy, exists } from "jsr:@std/fs@0.224.0"
 import type { SourceLike } from "./interfaces/SourceLike.ts"
 
 export const isGitRepo = async (dir: string) => {
@@ -72,14 +72,32 @@ async function getBooleanInput(options: string | InputOptions) {
 
 // source & paths are needed (we can't read them from lockfile) because the user should set them in `patchlift.ts`, not in `patchlift.lock`
 // TODO: extend RepoPathCommit to Branch
-export const applyPatches = (source: SourceLike, paths: string[]) => async (target: Target) => {
+export const applyPatches = (source: SourceLike, pathsToCopy: string[], pathsToRemove: string[] = []) => async (target: Target) => {
   const targetSh = target.asShell()
   const sourceSh = source.asShell()
   const sourceHead = (await sourceSh`git rev-parse HEAD`).text().trim()
   await withFile(target.lockfile(), async (contentOld) => {
     const lockfile = Lockfile.fromString(contentOld)
+
+    // Process paths to remove
+    for (const path of pathsToRemove) {
+      const targetPath = target.asDir() + SEPARATOR + path
+      const fileExists = await exists(targetPath)
+
+      if (fileExists) {
+        if (await getBooleanInput(`Remove ${path} from target? (Y/n)`)) {
+          await Deno.remove(targetPath, { recursive: true })
+          // Remove from lockfile if exists
+          lockfile.rpcs = lockfile.rpcs.filter((rpc) => !(rpc.repo === source.asRepoUrl() && rpc.path === path))
+          console.info(`Removed ${path}`)
+        } else {
+          console.info("Cancelled by user")
+        }
+      }
+    }
+
     // await sequentially to allow the user to make decisions
-    for (const path of paths) {
+    for (const path of pathsToCopy) {
       // NOTE: Can't ask for user input in this function because it is called by `withFile`, which must
       const rpc = lockfile.rpcs.find((rpc) => rpc.repo === source.asRepoUrl() && rpc.path === path)
       if (rpc) {
@@ -112,5 +130,5 @@ export const applyPatches = (source: SourceLike, paths: string[]) => async (targ
 export const applyPatchesSTP = async (getSource: () => Promise<SourceLike>, targetDir: string | undefined, paths: string[]) => {
   const source = await getSource()
   const target = await Target.create(targetDir)
-  return applyPatches(source, paths)(target)
+  return applyPatches(source, paths, [])(target)
 }
