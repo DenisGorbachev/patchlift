@@ -11,18 +11,23 @@ export const README = ["README.ts", ...DENO]
 export const WORKFLOWS_CI = [".github/workflows/ci.yml"]
 export const WORKFLOWS_RELEASE_PLZ = [".github/workflows/release-plz.yml"]
 export const WORKFLOWS_CI_RELEASE_PLZ = [...WORKFLOWS_CI, ...WORKFLOWS_RELEASE_PLZ]
-export const JUSTFILE = ["Justfile"]
-export const RUST_PUBLIC = unique([
+export const RUST_PUBLIC_PATCH = unique([
   ...BASIC,
   ...RUST,
   ...README,
   ...WORKFLOWS_CI_RELEASE_PLZ,
   ...LICENSES_APACHE_MIT,
 ])
-export const RUST_PRE_PUBLIC = unique([
+export const RUST_PUBLIC_REMOVE = [
+  "install.sh",
+  "deno.lock",
+  "Justfile",
+]
+export const RUST_PRE_PUBLIC_PATCH = unique([
   ...BASIC,
   ...RUST,
   ...README,
   ...WORKFLOWS_CI,
   ...LICENSES_APACHE_MIT,
 ])
+export const RUST_PRE_PUBLIC_REMOVE = RUST_PUBLIC_REMOVE
